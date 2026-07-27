@@ -31,4 +31,9 @@ class Validators {
     }
     return null;
   }
+
+  static String? match(String? value, String? target, {String message = 'Values do not match'}) {
+    if (value != target) return message;
+    return null;
+  }
 }

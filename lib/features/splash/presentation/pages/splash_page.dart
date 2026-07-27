@@ -1,38 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../app/constants/app_constants.dart';
-import '../../../../app/router/route_paths.dart';
 import '../../../../core/utils/app_spacing.dart';
 
-class SplashPage extends StatefulWidget {
+/// Pure branding — navigation is owned entirely by the router's auth
+/// redirect (see `app/router/auth_redirect.dart`), which sends the user
+/// onward as soon as the initial Firebase auth-state check resolves.
+class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
-
-  @override
-  State<SplashPage> createState() => _SplashPageState();
-}
-
-class _SplashPageState extends State<SplashPage> {
-  Timer? _navigationTimer;
-
-  @override
-  void initState() {
-    super.initState();
-    _navigationTimer = Timer(AppConstants.splashDuration, _navigateToAuthentication);
-  }
-
-  void _navigateToAuthentication() {
-    if (!mounted) return;
-    context.go(RoutePaths.authentication);
-  }
-
-  @override
-  void dispose() {
-    _navigationTimer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
