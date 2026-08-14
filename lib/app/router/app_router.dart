@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/authentication/domain/recovery_failure_reason.dart';
 import '../../features/authentication/presentation/pages/forgot_password_page.dart';
 import '../../features/authentication/presentation/pages/login_page.dart';
+import '../../features/authentication/presentation/pages/recovery_error_page.dart';
 import '../../features/authentication/presentation/pages/register_page.dart';
+import '../../features/authentication/presentation/pages/set_new_password_page.dart';
 import '../../features/authentication/presentation/providers/auth_providers.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
@@ -25,6 +29,8 @@ import 'route_paths.dart';
 final goRouterProvider = Provider<GoRouter>((ref) {
   final refreshListenable = ValueNotifier<int>(0);
   ref.listen(authStateChangesProvider, (previous, next) => refreshListenable.value++);
+  ref.listen(passwordRecoveryProvider, (previous, next) => refreshListenable.value++);
+  ref.listen(recoveryFailureReasonProvider, (previous, next) => refreshListenable.value++);
   ref.onDispose(refreshListenable.dispose);
 
   return GoRouter(
@@ -32,11 +38,28 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshListenable,
     redirect: (context, state) {
       final authState = ref.read(authStateChangesProvider);
-      return computeAuthRedirect(
-        isLoggedIn: authState.valueOrNull != null,
-        isResolving: authState.isLoading && !authState.hasValue,
+      final isPasswordRecovery = ref.read(passwordRecoveryProvider).valueOrNull ?? false;
+      final recoveryFailureReason = ref.read(recoveryFailureReasonProvider);
+      final isLoggedIn = authState.valueOrNull != null;
+      final isResolving = authState.isLoading && !authState.hasValue;
+      final target = computeAuthRedirect(
+        isLoggedIn: isLoggedIn,
+        isResolving: isResolving,
+        isPasswordRecovery: isPasswordRecovery,
+        hasRecoveryFailure: recoveryFailureReason != null,
         matchedLocation: state.matchedLocation,
       );
+      // TEMPORARY DEV LOGGING -- diagnosing the password-recovery deep
+      // link. Fires on every navigation, so expect noise from ordinary
+      // navigation too -- what matters is what happens right after a
+      // [PASSWORD RECOVERY] Incoming URI log from main.dart.
+      debugPrint(
+        '[ROUTER DEBUG] matchedLocation: ${state.matchedLocation}, '
+        'isLoggedIn: $isLoggedIn, isResolving: $isResolving, '
+        'isPasswordRecovery: $isPasswordRecovery, recoveryFailureReason: $recoveryFailureReason, '
+        'Navigation target: ${target ?? "(none, stay)"}',
+      );
+      return target;
     },
     routes: [
       GoRoute(
@@ -58,6 +81,24 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: RoutePaths.forgotPassword,
         name: RouteNames.forgotPassword,
         builder: (context, state) => const ForgotPasswordPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.resetPassword,
+        name: RouteNames.resetPassword,
+        builder: (context, state) => const SetNewPasswordPage(),
+      ),
+      GoRoute(
+        path: RoutePaths.recoveryError,
+        name: RouteNames.recoveryError,
+        builder: (context, state) => Consumer(
+          builder: (context, ref, _) => RecoveryErrorPage.forReason(
+            ref.watch(recoveryFailureReasonProvider) ?? RecoveryFailureReason.unknown,
+            onPressed: () {
+              ref.read(recoveryFailureReasonProvider.notifier).clear();
+              context.go(RoutePaths.forgotPassword);
+            },
+          ),
+        ),
       ),
       GoRoute(
         path: RoutePaths.dashboard,

@@ -1,0 +1,15 @@
+-- Corrective fix: the live vault_documents table has a column named
+-- owner_id, but the canonical schema (supabase_vault_documents.sql) and
+-- every line of Dart code (VaultDocumentModel, SupabaseVaultRemoteDataSource,
+-- VaultRepositoryImpl) use owner_uid. This is why uploads fail after a
+-- successful Storage write: PostgREST rejects the insert with
+-- PGRST204 "Could not find the 'owner_uid' column of 'vault_documents'".
+--
+-- Run this once, manually, in the Supabase Dashboard's SQL Editor.
+--
+-- RENAME COLUMN updates the column in place -- Postgres automatically
+-- repoints every existing index and RLS policy that references it by name,
+-- so this does not require dropping/recreating
+-- vault_documents_owner_updated_idx, vault_documents_owner_category_idx, or
+-- any of the four RLS policies. No data is lost or altered.
+alter table public.vault_documents rename column owner_id to owner_uid;

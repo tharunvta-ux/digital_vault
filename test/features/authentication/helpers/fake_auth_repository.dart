@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:digital_vault/features/authentication/domain/entities/user_entity.dart';
+import 'package:digital_vault/features/authentication/domain/recovery_failure_reason.dart';
 import 'package:digital_vault/features/authentication/domain/repositories/auth_repository.dart';
 
 /// Hand-written test double — no mocking library needed since
@@ -10,6 +11,9 @@ class FakeAuthRepository implements AuthRepository {
 
   UserEntity? _currentUser;
   final StreamController<UserEntity?> _controller = StreamController<UserEntity?>.broadcast();
+  final StreamController<bool> _passwordRecoveryController = StreamController<bool>.broadcast();
+  final StreamController<RecoveryFailureReason> _recoveryFailureController =
+      StreamController<RecoveryFailureReason>.broadcast();
 
   /// Set to make the next call throw; automatically reset after it fires.
   Exception? failureToThrow;
@@ -17,12 +21,20 @@ class FakeAuthRepository implements AuthRepository {
   int loginCallCount = 0;
   int registerCallCount = 0;
   int sendPasswordResetEmailCallCount = 0;
+  int updatePasswordCallCount = 0;
   int logoutCallCount = 0;
 
   /// Arguments from the most recent call, for tests that assert a page
   /// wired its form fields through to the right method correctly.
   String? lastEmail;
   String? lastPassword;
+  String? lastNewPassword;
+
+  /// Lets a test simulate arriving via the password-recovery deep link.
+  void emitPasswordRecovery(bool isRecovering) => _passwordRecoveryController.add(isRecovering);
+
+  /// Lets a test simulate an expired/already-used/unrecognized recovery link.
+  void emitRecoveryFailure(RecoveryFailureReason reason) => _recoveryFailureController.add(reason);
 
   /// When set, calls await this completer before resolving — lets a test
   /// hold a call "in flight" to assert loading state, then let it finish.
@@ -61,9 +73,23 @@ class FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Stream<bool> passwordRecoveryEvents() => _passwordRecoveryController.stream;
+
+  @override
+  Stream<RecoveryFailureReason> recoveryFailureEvents() => _recoveryFailureController.stream;
+
+  @override
   Future<void> sendPasswordResetEmail({required String email}) async {
     sendPasswordResetEmailCallCount++;
     lastEmail = email;
+    await _maybeAwaitGate();
+    _maybeThrow();
+  }
+
+  @override
+  Future<void> updatePassword({required String newPassword}) async {
+    updatePasswordCallCount++;
+    lastNewPassword = newPassword;
     await _maybeAwaitGate();
     _maybeThrow();
   }
@@ -94,5 +120,9 @@ class FakeAuthRepository implements AuthRepository {
     if (gate != null) await gate.future;
   }
 
-  void dispose() => _controller.close();
+  void dispose() {
+    _controller.close();
+    _passwordRecoveryController.close();
+    _recoveryFailureController.close();
+  }
 }

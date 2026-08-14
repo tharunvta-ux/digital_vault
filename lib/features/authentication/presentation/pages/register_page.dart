@@ -36,9 +36,14 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    // TEMPORARY DEV LOGGING -- remove once the registration issue is diagnosed.
+    debugPrint('[STEP 1] RegisterPage._submit -- Register button pressed');
+    debugPrint('[STEP 1] email: $email');
     ref.read(registerControllerProvider.notifier).register(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+          email: email,
+          password: password,
         );
   }
 

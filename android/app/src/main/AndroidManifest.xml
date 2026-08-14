@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Smart Reminder's local notification engine (flutter_local_notifications).
+         POST_NOTIFICATIONS: runtime-requested via NotificationService.requestPermission()
+         on Android 13+; listing it here only makes the request possible, it
+         doesn't grant it. SCHEDULE_EXACT_ALARM: needed for
+         AndroidScheduleMode.exactAllowWhileIdle so reminders fire at the exact
+         time even in Doze; also requested at runtime, not silently granted. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
         android:label="digital_vault"
         android:name="${applicationName}"

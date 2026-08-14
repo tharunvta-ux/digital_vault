@@ -6,6 +6,8 @@ class RoutePaths {
   static const String login = '/login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
+  static const String resetPassword = '/reset-password';
+  static const String recoveryError = '/recovery-error';
   static const String dashboard = '/dashboard';
   static const String smartVault = '/smart-vault';
   static const String reminder = '/reminder';
@@ -21,6 +23,8 @@ class RouteNames {
   static const String login = 'login';
   static const String register = 'register';
   static const String forgotPassword = 'forgotPassword';
+  static const String resetPassword = 'resetPassword';
+  static const String recoveryError = 'recoveryError';
   static const String dashboard = 'dashboard';
   static const String smartVault = 'smartVault';
   static const String reminder = 'reminder';

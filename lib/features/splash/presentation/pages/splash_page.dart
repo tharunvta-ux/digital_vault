@@ -5,7 +5,7 @@ import '../../../../core/utils/app_spacing.dart';
 
 /// Pure branding — navigation is owned entirely by the router's auth
 /// redirect (see `app/router/auth_redirect.dart`), which sends the user
-/// onward as soon as the initial Firebase auth-state check resolves.
+/// onward as soon as the initial Supabase auth-state check resolves.
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
 

@@ -1,12 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 import '../../domain/entities/user_entity.dart';
 
-/// Maps Firebase's [firebase_auth.User] to the domain [UserEntity].
-///
-/// Purely an in-memory mapper — no `toJson`/persistence, since this module
-/// never writes a Firestore user document.
+/// Maps a backend SDK's user type to the domain [UserEntity].
 class UserModel extends UserEntity {
-  UserModel.fromFirebaseUser(firebase_auth.User user)
-      : super(uid: user.uid, email: user.email ?? '');
+  /// Supabase's `id` (a uuid string) fills the same role Firebase's `uid`
+  /// did -- both are just "the authenticated user's unique identifier."
+  UserModel.fromSupabaseUser(supabase.User user)
+      : super(uid: user.id, email: user.email ?? '');
 }
